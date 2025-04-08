@@ -1,0 +1,111 @@
+-- Find the crime scene report
+SELECT *
+FROM crime_scene_report
+WHERE city = 'SQL City' and
+    type = 'murder'
+--The first witness lives at the last house on "Northwestern Dr".
+--The second witness, named Annabel, lives somewhere on "Franklin Ave".
+
+-- Find the first witness on Northwestern Dr.
+SELECT *
+FROM person
+WHERE address_street_name LIKE 'Northwestern Dr'
+ORDER BY address_number
+--Morty Shapiro: id-14887, license_id 118009, 4919 Northwestern Dr., SSN 111564949
+
+-- Find second witness named Anabel
+SELECT *
+FROM person
+WHERE name LIKE 'Annabel%' and
+    address_street_name = 'Franklin Ave'
+--Annabel Miller: id=16371
+
+-- Pull transcripts of interviews from Annabel Miller and Morty Schapiro
+SELECT *
+from interview
+WHERE person_id = 16371
+-- I saw the murder happen, and I recognized the killer from my gym when I was working out last week on January the 9th.
+SELECT *
+from interview
+WHERE person_id = 14887
+-- I heard a gunshot and then saw a man run out.
+-- He had a "Get Fit Now Gym" bag. The membership number on the bag started with "48Z". Only gold members have those bags. 
+-- The man got into a car with a plate that included "H42W".
+
+-- Find Annabel's member id at the gym
+SELECT *
+from get_fit_now_member
+WHERE name = 'Annabel Miller'
+-- id = 90081, person_id = 16371
+
+-- Find when Annabel checked in and who else was there
+SELECT *
+from get_fit_now_check_in
+WHERE check_in_date = 20180109
+-- IDs of other gym members checked in: 48Z7A and 48Z55
+
+-- Find names of two people Annabel saw at the gym
+SELECT *
+from get_fit_now_member
+WHERE id = '48Z7A'
+-- Joe Germuska (also a gold member)
+SELECT *
+from get_fit_now_member
+WHERE id = '48Z55'
+-- Jeremy Bowers (gold member)
+
+-- Check the license plate number from Morty's interview
+-- First, find Joe and Jeremy's license IDs
+SELECT *
+from person
+WHERE name = 'Joe Germuska'
+-- license_id = 173289, but that isn't present in the drivers_license table
+SELECT *
+from person
+WHERE name = 'Jeremy Bowers'
+-- license_id = 423327
+SELECT *
+from drivers_license
+WHERE id = 423327
+--plate_number = 0H42W2 - checks out from Morty's statement
+
+-- And the killer is... Jeremy Bowers!
+
+-- Check Jeremy's interview transcript
+SELECT *
+from interview
+WHERE person_id = 67318
+
+-- Salient points:
+-- hired by rich 65-67 cm woman, red hair
+-- drives a Tesla Model S
+-- attended SQL Symphony Concert 3 times in December 2017
+
+-- Let's find this mysterious woman
+SELECT *
+from drivers_license
+WHERE
+    hair_color = 'red' AND
+	car_make = 'Tesla' AND
+	car_model = 'Model S' AND
+    gender = 'female'
+-- IDs that match description: 202298, 291182, 918773
+
+-- Find names of individuals who attended SQL Symphony Concert 3 times in Dec 2017
+SELECT person_id, COUNT(person_id), date
+from facebook_event_checkin
+WHERE
+	event_name = 'SQL Symphony Concert' AND
+	date >= 20171200 AND
+	date <= 20180000
+GROUP BY person_id
+ORDER BY COUNT(person_id) DESC
+-- two person IDs that fit criteria - 24556 and 99716
+
+-- Time to find those IDs in the person table
+SELECT id, name
+FROM person
+WHERE id = 99716
+-- 24556 belongs to a male, 99716 belongs to Miranda Priestly
+
+-- Miranda Priestly orchestrated the murder!
